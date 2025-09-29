@@ -1,0 +1,89 @@
+<div class="rule-list-container">
+  <div class="header">
+    <h2>Rules Management</h2>
+    <button class="btn btn-primary" (click)="loadRules()">Refresh</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Loading rules...</div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && rules.length === 0" class="no-rules">
+    <p>No rules found. Please fetch rules from Git repository first.</p>
+  </div>
+
+  <div *ngIf="!loading && rules.length > 0" class="rules-table-container">
+    <table class="rules-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th *ngFor="let key of getConditionKeys()">{{ key }}</th>
+          <th *ngFor="let key of getActionKeys()">{{ key }}</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let rule of rules" 
+            [class.selected]="selectedRule?.id === rule.id"
+            (click)="selectRule(rule)">
+          <td>{{ rule.id }}</td>
+          <td>{{ rule.name }}</td>
+          <td>{{ rule.description || '-' }}</td>
+          <td *ngFor="let key of getConditionKeys()">
+            {{ rule.conditions[key] || '-' }}
+          </td>
+          <td *ngFor="let key of getActionKeys()">
+            {{ rule.actions[key] || '-' }}
+          </td>
+          <td>
+            <span class="status" [class.active]="rule.active" [class.inactive]="!rule.active">
+              {{ rule.active ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-danger" (click)="deleteRule(rule); $event.stopPropagation()">
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="selectedRule" class="rule-details">
+    <h3>Rule Details</h3>
+    <div class="details-content">
+      <p><strong>ID:</strong> {{ selectedRule.id }}</p>
+      <p><strong>Name:</strong> {{ selectedRule.name }}</p>
+      <p><strong>Description:</strong> {{ selectedRule.description || 'No description' }}</p>
+      <p><strong>Active:</strong> {{ selectedRule.active ? 'Yes' : 'No' }}</p>
+      
+      <div class="conditions-actions">
+        <div class="conditions">
+          <h4>Conditions</h4>
+          <div *ngIf="!hasConditions(selectedRule)" class="empty">
+            No conditions defined
+          </div>
+          <div *ngFor="let item of selectedRule.conditions | keyvalue" class="condition-item">
+            <strong>{{ item.key }}:</strong> {{ item.value }}
+          </div>
+        </div>
+        
+        <div class="actions">
+          <h4>Actions</h4>
+          <div *ngIf="!hasActions(selectedRule)" class="empty">
+            No actions defined
+          </div>
+          <div *ngFor="let item of selectedRule.actions | keyvalue" class="action-item">
+            <strong>{{ item.key }}:</strong> {{ item.value }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

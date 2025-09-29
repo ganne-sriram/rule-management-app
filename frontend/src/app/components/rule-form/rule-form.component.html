@@ -1,0 +1,131 @@
+<div class="rule-form-container">
+  <h2>{{ isEditMode ? 'Edit Rule' : 'Create New Rule' }}</h2>
+
+  <div *ngIf="loading" class="loading">
+    {{ isEditMode ? 'Loading rule...' : 'Saving rule...' }}
+  </div>
+
+  <form *ngIf="!loading" (ngSubmit)="onSubmit()" #ruleForm="ngForm" class="rule-form">
+    <div class="form-section">
+      <h3>Basic Information</h3>
+      
+      <div class="form-group">
+        <label for="name">Rule Name *</label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name"
+          [(ngModel)]="rule.name" 
+          required 
+          placeholder="Enter rule name"
+          class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea 
+          id="description" 
+          name="description"
+          [(ngModel)]="rule.description" 
+          placeholder="Enter rule description"
+          class="form-control"
+          rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input 
+            type="checkbox" 
+            name="active"
+            [(ngModel)]="rule.active">
+          Active Rule
+        </label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Conditions</h3>
+      <p class="section-description">Define the conditions that must be met for this rule to trigger</p>
+      
+      <div *ngFor="let key of conditionKeys; let i = index" class="dynamic-field">
+        <div class="field-row">
+          <input 
+            type="text" 
+            placeholder="Condition name"
+            [value]="key"
+            (input)="updateConditionKey(key, $any($event.target).value, i)"
+            class="form-control field-key">
+          <input 
+            type="text" 
+            placeholder="Condition value"
+            [(ngModel)]="rule.conditions[key]"
+            [name]="'condition_' + i"
+            class="form-control field-value">
+          <button 
+            type="button" 
+            class="btn btn-sm btn-danger"
+            (click)="removeConditionField(i)"
+            [disabled]="conditionKeys.length <= 1">
+            Remove
+          </button>
+        </div>
+      </div>
+      
+      <button type="button" class="btn btn-secondary" (click)="addConditionField()">
+        Add Condition
+      </button>
+    </div>
+
+    <div class="form-section">
+      <h3>Actions</h3>
+      <p class="section-description">Define the actions to be executed when this rule is triggered</p>
+      
+      <div *ngFor="let key of actionKeys; let i = index" class="dynamic-field">
+        <div class="field-row">
+          <input 
+            type="text" 
+            placeholder="Action name"
+            [value]="key"
+            (input)="updateActionKey(key, $any($event.target).value, i)"
+            class="form-control field-key">
+          <input 
+            type="text" 
+            placeholder="Action value"
+            [(ngModel)]="rule.actions[key]"
+            [name]="'action_' + i"
+            class="form-control field-value">
+          <button 
+            type="button" 
+            class="btn btn-sm btn-danger"
+            (click)="removeActionField(i)"
+            [disabled]="actionKeys.length <= 1">
+            Remove
+          </button>
+        </div>
+      </div>
+      
+      <button type="button" class="btn btn-secondary" (click)="addActionField()">
+        Add Action
+      </button>
+    </div>
+
+    <div *ngIf="error" class="alert alert-error">
+      {{ error }}
+    </div>
+
+    <div class="form-actions">
+      <button 
+        type="submit" 
+        [disabled]="loading || !ruleForm.form.valid"
+        class="btn btn-primary">
+        {{ isEditMode ? 'Update Rule' : 'Create Rule' }}
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-secondary"
+        (click)="cancel()">
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>

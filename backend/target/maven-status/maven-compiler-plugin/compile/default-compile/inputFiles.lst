@@ -1,0 +1,8 @@
+/home/ubuntu/rule-management-app/backend/src/main/java/com/rulemanagement/service/GitService.java
+/home/ubuntu/rule-management-app/backend/src/main/java/com/rulemanagement/RuleManagementApplication.java
+/home/ubuntu/rule-management-app/backend/src/main/java/com/rulemanagement/service/ExcelService.java
+/home/ubuntu/rule-management-app/backend/src/main/java/com/rulemanagement/config/CorsConfig.java
+/home/ubuntu/rule-management-app/backend/src/main/java/com/rulemanagement/controller/RuleController.java
+/home/ubuntu/rule-management-app/backend/src/main/java/com/rulemanagement/model/Rule.java
+/home/ubuntu/rule-management-app/backend/src/main/java/com/rulemanagement/model/GitRepository.java
+/home/ubuntu/rule-management-app/backend/src/main/java/com/rulemanagement/service/RuleService.java

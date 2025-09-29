@@ -1,0 +1,81 @@
+<div class="git-config-container">
+  <h2>Git Repository Configuration</h2>
+  <p>Configure your Git repository to fetch Excel rules file</p>
+
+  <form (ngSubmit)="onSubmit()" #gitForm="ngForm" class="git-form">
+    <div class="form-group">
+      <label for="url">Repository URL *</label>
+      <input 
+        type="url" 
+        id="url" 
+        name="url"
+        [(ngModel)]="gitRepo.url" 
+        required 
+        placeholder="https://github.com/username/repo.git"
+        class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label for="branch">Branch</label>
+      <input 
+        type="text" 
+        id="branch" 
+        name="branch"
+        [(ngModel)]="gitRepo.branch" 
+        placeholder="main"
+        class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label for="filePath">Excel File Path *</label>
+      <input 
+        type="text" 
+        id="filePath" 
+        name="filePath"
+        [(ngModel)]="gitRepo.filePath" 
+        required 
+        placeholder="path/to/rules.xlsx"
+        class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label for="username">Username (optional)</label>
+      <input 
+        type="text" 
+        id="username" 
+        name="username"
+        [(ngModel)]="gitRepo.username" 
+        placeholder="For private repositories"
+        class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label for="token">Access Token (optional)</label>
+      <input 
+        type="password" 
+        id="token" 
+        name="token"
+        [(ngModel)]="gitRepo.token" 
+        placeholder="Personal access token"
+        class="form-control">
+    </div>
+
+    <div class="form-actions">
+      <button 
+        type="submit" 
+        [disabled]="loading || !gitForm.form.valid"
+        class="btn btn-primary">
+        <span *ngIf="loading">Fetching...</span>
+        <span *ngIf="!loading">Fetch Rules</span>
+      </button>
+    </div>
+
+    <div *ngIf="error" class="alert alert-error">
+      {{ error }}
+    </div>
+
+    <div *ngIf="success" class="alert alert-success">
+      Rules fetched successfully! Check the Rules List tab.
+    </div>
+  </form>
+</div>
