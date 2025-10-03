@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Rule, GitRepository } from '../models/rule.model';
+import { Rule, GitRepository, PullRequestRequest, ValidationResult, SaveToGitResponse, CreatePRResponse } from '../models/rule.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -34,5 +34,17 @@ export class RuleService {
 
   deleteRule(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  saveRulesToGit(request: PullRequestRequest): Observable<SaveToGitResponse> {
+    return this.http.post<SaveToGitResponse>(`${this.apiUrl}/save-to-git`, request);
+  }
+
+  createPullRequest(request: PullRequestRequest): Observable<CreatePRResponse> {
+    return this.http.post<CreatePRResponse>(`${this.apiUrl}/create-pr`, request);
+  }
+
+  validateRules(): Observable<ValidationResult> {
+    return this.http.post<ValidationResult>(`${this.apiUrl}/validate`, {});
   }
 }

@@ -21,6 +21,7 @@ public class RuleService {
 
     private final Map<Long, Rule> rulesCache = new ConcurrentHashMap<>();
     private final AtomicLong idGenerator = new AtomicLong(1);
+    private GitRepository lastUsedGitRepo;
 
     public List<Rule> fetchRulesFromGit(GitRepository gitRepo) throws Exception {
         File excelFile = gitService.fetchFileFromGit(gitRepo);
@@ -31,7 +32,13 @@ public class RuleService {
             rulesCache.put(rule.getId(), rule);
         }
         
+        this.lastUsedGitRepo = gitRepo;
+        
         return rules;
+    }
+
+    public GitRepository getLastUsedGitRepo() {
+        return lastUsedGitRepo;
     }
 
     public List<Rule> getAllRules() {
