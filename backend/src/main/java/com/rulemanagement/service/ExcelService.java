@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 
 @Service
@@ -85,6 +87,120 @@ public class ExcelService {
         }
 
         return rules;
+    }
+
+    public File writeRulesToExcel(List<Rule> rules, File templateFile) throws IOException {
+        try (FileInputStream fis = new FileInputStream(templateFile);
+             Workbook workbook = templateFile.getName().endsWith(".xlsx") ? 
+                 new XSSFWorkbook(fis) : new HSSFWorkbook(fis)) {
+            
+            Sheet sheet = workbook.getSheetAt(0);
+            
+            int dataStartRow = findDataStartRow(sheet);
+            if (dataStartRow == -1) {
+                throw new IOException("Could not find data start row. Excel file may not be in Drools Decision Table format.");
+            }
+            
+            for (int i = sheet.getLastRowNum(); i >= dataStartRow; i--) {
+                Row row = sheet.getRow(i);
+                if (row != null) {
+                    sheet.removeRow(row);
+                }
+            }
+            
+            List<String> conditionKeys = extractColumnHeaders(sheet, "CONDITION");
+            List<String> actionKeys = extractColumnHeaders(sheet, "ACTION");
+            
+            for (int i = 0; i < rules.size(); i++) {
+                Rule rule = rules.get(i);
+                Row row = sheet.createRow(dataStartRow + i);
+                
+                Cell nameCell = row.createCell(0);
+                nameCell.setCellValue(rule.getName());
+                
+                int colIndex = 1;
+                for (String key : conditionKeys) {
+                    Object value = rule.getConditions().get(key);
+                    if (value != null) {
+                        Cell cell = row.createCell(colIndex);
+                        setCellValue(cell, value);
+                    }
+                    colIndex++;
+                }
+                
+                for (String key : actionKeys) {
+                    Object value = rule.getActions().get(key);
+                    if (value != null) {
+                        Cell cell = row.createCell(colIndex);
+                        setCellValue(cell, value);
+                    }
+                    colIndex++;
+                }
+            }
+            
+            File outputFile = Files.createTempFile("rules-", ".xlsx").toFile();
+            try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+                workbook.write(fos);
+            }
+            
+            return outputFile;
+        }
+    }
+
+    private int findDataStartRow(Sheet sheet) {
+        for (int i = 0; i <= 20 && i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+            
+            Cell cell = row.getCell(0);
+            if (cell != null) {
+                String value = getCellValueAsString(cell).trim().toUpperCase();
+                if (value.equals("CONDITION") || value.equals("ACTION")) {
+                    return i + 3;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private List<String> extractColumnHeaders(Sheet sheet, String headerType) {
+        List<String> headers = new ArrayList<>();
+        
+        for (int i = 0; i <= 20 && i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+            
+            Cell firstCell = row.getCell(0);
+            if (firstCell != null && getCellValueAsString(firstCell).trim().toUpperCase().equals(headerType)) {
+                Row nameRow = sheet.getRow(i + 1);
+                if (nameRow != null) {
+                    for (int colIndex = 1; colIndex <= nameRow.getLastCellNum(); colIndex++) {
+                        Cell nameCell = nameRow.getCell(colIndex);
+                        if (nameCell != null) {
+                            String headerName = getCellValueAsString(nameCell).trim();
+                            if (!headerName.isEmpty()) {
+                                headers.add(headerName);
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        
+        return headers;
+    }
+
+    private void setCellValue(Cell cell, Object value) {
+        if (value instanceof String) {
+            cell.setCellValue((String) value);
+        } else if (value instanceof Number) {
+            cell.setCellValue(((Number) value).doubleValue());
+        } else if (value instanceof Boolean) {
+            cell.setCellValue((Boolean) value);
+        } else {
+            cell.setCellValue(value.toString());
+        }
     }
 
     private String getCellValueAsString(Cell cell) {

@@ -1,7 +1,11 @@
 <div class="rule-list-container">
   <div class="header">
     <h2>Rules Management</h2>
-    <button class="btn btn-primary" (click)="loadRules()">Refresh</button>
+    <div class="button-group">
+      <button class="btn btn-primary" (click)="loadRules()">Refresh</button>
+      <button class="btn btn-success" (click)="saveToGit()" [disabled]="loading || rules.length === 0">Save to Git</button>
+      <button class="btn btn-info" (click)="createPR()" [disabled]="loading || rules.length === 0 || !lastSavedBranch">Create PR</button>
+    </div>
   </div>
 
   <div *ngIf="loading" class="loading">Loading rules...</div>

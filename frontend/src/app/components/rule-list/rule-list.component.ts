@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RuleService } from '../../services/rule.service';
-import { Rule } from '../../models/rule.model';
+import { Rule, GitRepository } from '../../models/rule.model';
 
 @Component({
   selector: 'app-rule-list',
@@ -15,6 +15,8 @@ export class RuleListComponent implements OnInit {
   loading = false;
   error = '';
   selectedRule: Rule | null = null;
+  lastSavedBranch: string | null = null;
+  gitRepoConfig: GitRepository | null = null;
 
   constructor(private ruleService: RuleService) {}
 
@@ -82,5 +84,94 @@ export class RuleListComponent implements OnInit {
 
   hasActions(rule: Rule): boolean {
     return Object.keys(rule.actions || {}).length > 0;
+  }
+
+  saveToGit() {
+    const urlInput = prompt('Enter Git repository URL:');
+    if (!urlInput) return;
+
+    const branchInput = prompt('Enter base branch (default: main):', 'main');
+    const filePathInput = prompt('Enter file path in repository (e.g., rules/EligibilityRules.xlsx):');
+    if (!filePathInput) return;
+
+    const usernameInput = prompt('Enter Git username:');
+    const tokenInput = prompt('Enter Git token (PAT):');
+
+    if (!usernameInput || !tokenInput) {
+      this.error = 'Username and token are required';
+      return;
+    }
+
+    this.gitRepoConfig = {
+      url: urlInput,
+      branch: branchInput || 'main',
+      filePath: filePathInput,
+      username: usernameInput,
+      token: tokenInput
+    };
+
+    this.loading = true;
+    this.error = '';
+
+    const request = {
+      gitRepo: this.gitRepoConfig,
+      commitMessage: 'Update decision table rules from web interface'
+    };
+
+    this.ruleService.saveRulesToGit(request).subscribe({
+      next: (response) => {
+        this.lastSavedBranch = response.branch;
+        let message = `Successfully saved to Git on branch: ${response.branch}`;
+        if (response.warnings && response.warnings.length > 0) {
+          message += '\n\nWarnings:\n' + response.warnings.join('\n');
+        }
+        alert(message);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Failed to save to Git: ' + (err.error?.message || err.error || err.message);
+        this.loading = false;
+      }
+    });
+  }
+
+  createPR() {
+    if (!this.lastSavedBranch) {
+      this.error = 'Please save to Git first before creating a PR';
+      return;
+    }
+
+    if (!this.gitRepoConfig) {
+      this.error = 'Git repository configuration not found';
+      return;
+    }
+
+    const titleInput = prompt('Enter PR title:', 'Update decision table rules');
+    if (!titleInput) return;
+
+    const descriptionInput = prompt('Enter PR description (optional):', 'Updated rules via web interface');
+
+    this.loading = true;
+    this.error = '';
+
+    const request = {
+      gitRepo: this.gitRepoConfig,
+      branchName: this.lastSavedBranch,
+      title: titleInput,
+      description: descriptionInput || 'Updated rules via web interface'
+    };
+
+    this.ruleService.createPullRequest(request).subscribe({
+      next: (response) => {
+        alert('Pull request created successfully!\n\n' + response.prUrl);
+        window.open(response.prUrl, '_blank');
+        this.loading = false;
+        this.lastSavedBranch = null;
+      },
+      error: (err) => {
+        this.error = 'Failed to create PR: ' + (err.error?.message || err.error || err.message);
+        this.loading = false;
+      }
+    });
   }
 }
